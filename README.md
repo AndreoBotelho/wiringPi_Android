@@ -1,5 +1,5 @@
-# wiringPi TinkerBoard
-wiringPi for TinkerBoard ported to Android.
+# wiringPi Android
+wiringPi for Android ported to Android. Fork wiringPi THinkerBoard from joerg65/wiringTinker_Android
 
 To compile the library, execute from the jni folder the command: 
 ```
