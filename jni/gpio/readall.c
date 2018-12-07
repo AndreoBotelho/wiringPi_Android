@@ -1,7 +1,7 @@
 /*
  * readall.c:
  *	The readall functions - getting a bit big, so split them out.
- *	Copyright (c) 2012-2015 Gordon Henderson
+ *	Copyright (c) 2012-2013 Gordon Henderson
  ***********************************************************************
  * This file is part of wiringPi:
  *	https://projects.drogon.net/raspberry-pi/wiringpi/
@@ -42,31 +42,6 @@ extern int wpMode ;
 #  define       FALSE   (1==2)
 #endif
 
-#define	INPUT			 0
-#define	OUTPUT			 1
-#define SERIAL       40
-#define PWM          43
-#define GPIOIN           53
-#define GPIOOUT          54
-#define CLKOUT           55
-
-
-static const char *asusPinModeToString (int mode)
-{
-  if (mode == SERIAL)
-    return "SERL";
-  else if ( mode == PWM)
-    return "PWM";
-  else if ( mode == INPUT)
-    return "IN";
-  else if ( mode == OUTPUT)
-    return "OUT";
-  else if ( mode == CLKOUT)
-    return "CLK";
-  else
-    return " ";
-}
-
 /*
  * doReadallExternal:
  *	A relatively crude way to read the pins on an external device.
@@ -105,7 +80,7 @@ static char *alts [] =
   "IN", "OUT", "ALT5", "ALT4", "ALT0", "ALT1", "ALT2", "ALT3"
 } ;
 
-static int physToWpi [64] = 
+/* guenter static int physToWpi [64] = 
 {
   -1,           // 0
   -1, -1,       // 1, 2
@@ -133,35 +108,101 @@ static int physToWpi [64] =
   -1, -1,
   -1, -1,
   -1, -1,
-  17, 18,
-  19, 20,
+  -1, -1,
+  -1, -1,
   -1, -1, -1, -1, -1, -1, -1, -1, -1
-} ;
+} ; 
+guenter ende */
 
+// guenter anfang
+static int physToWpi [64] =
+{
+  -1,        // 0
+  -1,  -1,   // 1, 2
+   8,  -1,   // 3, 4
+   9,  -1,   // 5, 6
+   7,  15,   // 7, 8
+  -1,  16,   // 9, 10
+   0,   1,   //11, 12
+   2,  -1,   //13, 14
+   3,   4,   //15, 16
+  -1,   5,   //17, 18
+  12,  -1,   //19, 20
+  13,   6,   //21, 22
+  14,  10,   //23, 24
+  -1,  11,   //25, 26
+  30,  31,   //27, 28
+  21,  -1,   //29, 30
+  22,  26,   //31, 32
+  23,  -1,   //33, 34
+  24,  27,   //35, 36
+  25,  28,   //37, 38
+  -1,  29,   //39, 40
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, //41-> 55
+   -1, -1, -1, -1, -1, -1, -1, -1 // 56-> 63
+} ;
+//guenter ende
+
+
+/* guenter static char *physNames [64] = 
+{
+  NULL,
+
+  "   3.3v", "5v     ",
+  "  SDA.1", "5V     ",
+  "  SCL.1", "0v     ",
+  "GPIO. 7", "TxD    ",
+  "     0v", "RxD    ",
+  "GPIO. 0", "GPIO. 1",
+  "GPIO. 2", "0v     ",
+  "GPIO. 3", "GPIO. 4",
+  "   3.3v", "GPIO. 5",
+  "   MOSI", "0v     ",
+  "   MISO", "GPIO. 6",
+  "   SCLK", "CE0    ",
+  "     0v", "CE1    ",
+  "  SDA.0", "SCL.0  ",
+  "GPIO.21", "0v     ",
+  "GPIO.22", "GPIO.26",
+  "GPIO.23", "0v     ",
+  "GPIO.24", "GPIO.27",
+  "GPIO.25", "GPIO.28",
+  "     0v", "GPIO.29",
+       NULL, NULL,
+       NULL, NULL,
+       NULL, NULL,
+       NULL, NULL,
+       NULL, NULL,
+  "GPIO.17", "GPIO.18",
+  "GPIO.19", "GPIO.20",
+   NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+} ;	guenter ende */
+
+//guenter orange pi
 static char *physNames [64] = 
 {
   NULL,
 
-  "   3.3v", "5v     ",//1,2
-  "  SDA.1", "5V     ",//3,4
-  "  SCL.1", "0v     ",//5,6
-  "GPIO0C1", "TxD1   ",//7,8
-  "     0v", "RxD1   ",//9,10
-  "GPIO5B4", "GPIO6A0",//11,12
-  "GPIO5B6", "0v     ",//13,14
-  "GPIO5B7", "GPIO5B2",//15,16
-  "   3.3v", "GPIO5B3",//17,18
-  "  MOSI1", "0v     ",//19,20
-  "  MISO1", "GPIO5C3",//21,22
-  "  SCLK1", "CE0    ",//23,24
-  "     0v", "CE1    ",//25,26
-  "  SDA.2", "SCL.2  ",//27,28
-  "GPIO5B5", "0v     ",//29.30
-  "GPIO5C0", "GPIO7C7",//31,32
-  "GPIO7C6", "0v     ",//33,34
-  "GPIO6A1", "GPIO7A7",//35,36
-  "GPIO7B0", "GPIO6A3",//37,38
-  "     0v", "GPIO6A4",//39,40
+ "    3.3v", "5v      ",
+ "   SDA.0", "5V      ",
+ "   SCL.0", "0v      ",
+ "  GPIO.7", "TxD3    ",
+ "      0v", "RxD3    ",
+ "    RxD2", "GPIO.1  ",
+ "    TxD2", "0v      ",
+ "    CTS2", "GPIO.4  ",
+ "    3.3v", "GPIO.5  ",
+ "    MOSI", "0v      ",
+ "    MISO", "RTS2    ",
+ "    SCLK", "CE0     ",
+ "      0v", "GPIO.11 ",
+ "   SDA.1", "SCL.1   ",
+ " GPIO.21", "0v      ",
+ " GPIO.22", "RTS1    ",
+ " GPIO.23", "0v      ",
+ " GPIO.24", "CTS1    ",
+ " GPIO.25", "TxD1    ",
+ "      0v", "RxD1    ",
        NULL, NULL,
        NULL, NULL,
        NULL, NULL,
@@ -171,6 +212,7 @@ static char *physNames [64] =
   "GPIO.19", "GPIO.20",
    NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
 } ;
+// guenter ende
 
 
 /*
@@ -180,10 +222,10 @@ static char *physNames [64] =
  *********************************************************************************
  */
 
-static void readallPhys (int physPin, int model)
+static void readallPhys (int physPin)
 {
   int pin ;
-	
+
   if (physPinToGpio (physPin) == -1)
     printf (" |     |    ") ;
   else
@@ -202,12 +244,8 @@ static void readallPhys (int physPin, int model)
     else
       pin = physToWpi [physPin] ;
 
-   if (model == PI_MODEL_TB)
-     printf (" | %4s", asusPinModeToString(getPinMode (pin))) ;
-   else
-     printf (" | %4s", alts [getAlt (pin)]) ;
-
-   printf (" | %d", digitalRead (pin)) ;
+    printf (" | %4s", alts [getAlt (pin)]) ;
+    printf (" | %d", digitalRead (pin)) ;
   }
 
 // Pin numbers:
@@ -229,22 +267,17 @@ static void readallPhys (int physPin, int model)
     else
       pin = physToWpi [physPin] ;
 
-   printf (" | %d", digitalRead (pin)) ; 
-   //printf (" |     ") ;
-   if (model == PI_MODEL_TB)
-     printf (" | %-4s", asusPinModeToString(getPinMode (pin))) ;
-   else
-     printf (" | %-4s", alts [getAlt (pin)]) ;
+    printf (" | %d", digitalRead (pin)) ;
+    printf (" | %-4s", alts [getAlt (pin)]) ;
   }
 
   printf (" | %-5s", physNames [physPin]) ;
 
-  if (physToWpi[physPin] == -1)
+  if (physToWpi     [physPin] == -1)
     printf (" |     |    ") ;
   else
-  	{
-    	printf (" | %-3d | %-3d", physToWpi [physPin], physPinToGpio (physPin)) ;
-  	}
+    printf (" | %-3d | %-3d", physToWpi [physPin], physPinToGpio (physPin)) ;
+
   printf (" |\n") ;
 }
 
@@ -260,11 +293,11 @@ void cmReadall (void)
   for (pin = 0 ; pin < 28 ; ++pin)
   {
     printf ("| %3d ", pin) ;
-   // printf ("| %-4s ", alts [getAlt (pin)]) ;
+    printf ("| %-4s ", alts [getAlt (pin)]) ;
     printf ("| %s  ", digitalRead (pin) == HIGH ? "High" : "Low ") ;
     printf ("|      ") ;
     printf ("| %3d ", pin + 28) ;
-  //  printf ("| %-4s ", alts [getAlt (pin + 28)]) ;
+    printf ("| %-4s ", alts [getAlt (pin + 28)]) ;
     printf ("| %s  ", digitalRead (pin + 28) == HIGH ? "High" : "Low ") ;
     printf ("|\n") ;
   }
@@ -293,61 +326,75 @@ void abReadall (int model, int rev)
       type = "B1" ;
 
   printf (" +-----+-----+---------+------+---+-Model %s-+---+------+---------+-----+-----+\n", type) ;
-  printf (" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU |\n") ;
+  printf (" | BCM | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | BCM |\n") ;
   printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
   for (pin = 1 ; pin <= 26 ; pin += 2)
-    readallPhys (pin, model) ;
+    readallPhys (pin) ;
 
   if (rev == PI_VERSION_2) // B version 2
   {
     printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
     for (pin = 51 ; pin <= 54 ; pin += 2)
-      readallPhys (pin, model) ;
+      readallPhys (pin) ;
   }
 
   printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
-  printf (" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU|\n") ;
+  printf (" | BCM | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | BCM |\n") ;
   printf (" +-----+-----+---------+------+---+-Model %s-+---+------+---------+-----+-----+\n", type) ;
 }
 
 
 /*
- * piPlusReadall:
- *	Read all the pins on the model A+ or the B+
+ * bPlusReadall:
+ *	Read all the pins on the model B+
  *********************************************************************************
  */
 
-static void plus2header (int model)
-{
-  /**/ if (model == PI_MODEL_AP)
-    printf (" +-----+-----+---------+------+---+--A Plus--+---+------+---------+-----+-----+\n") ;
-  else if (model == PI_MODEL_BP)
-    printf (" +-----+-----+---------+------+---+--B Plus--+---+------+---------+-----+-----+\n") ;
-  else if (model == PI_MODEL_ZERO)
-    printf (" +-----+-----+---------+------+---+-Pi Zero--+---+------+---------+-----+-----+\n") ;
-  else if (model == PI_MODEL_TB)
-    printf (" +-----+-----+---------+------+---+--Tinker--+---+------+---------+-----+-----+\n") ;
-  else
-    printf (" +-----+-----+---------+------+---+---Pi ----+---+------+---------+-----+-----+\n") ;
-}
-
-
-void piPlusReadall (int model)
+void bPlusReadall (void)
 {
   int pin ;
 
-  plus2header (model) ;
-
-  printf (" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU |\n") ;
+  printf (" +-----+-----+---------+------+---+--B Plus--+---+------+---------+-----+-----+\n") ;
+  printf (" | BCM | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | BCM |\n") ;
   printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
   for (pin = 1 ; pin <= 40 ; pin += 2)
-    readallPhys (pin, model) ;
+    readallPhys (pin) ;
   printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
-  printf (" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU |\n") ;
-
-  plus2header (model) ;
+  printf (" | BCM | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | BCM |\n") ;
+  printf (" +-----+-----+---------+------+---+--B Plus--+---+------+---------+-----+-----+\n") ;
 }
 
+//add for BananaPro by lemaker team
+void BPReadAll(void)
+{
+  int pin ;
+
+  printf (" +-----+-----+---------+------+---+--Banana Pro--+---+------+---------+-----+-----+\n") ;
+  printf (" | BCM | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | BCM |\n") ;
+  printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
+  for (pin = 1 ; pin <= 40 ; pin += 2)
+    readallPhys (pin) ;
+  printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
+  printf (" | BCM | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | BCM |\n") ;
+  printf (" +-----+-----+---------+------+---+--Banana Pro--+---+------+---------+-----+-----+\n") ;	
+}
+//end 2014.09.26
+
+//guenter 
+void OrangePiReadAll(void)
+{
+  int pin ;
+
+  printf (" +-----+-----+----------+------+---+-Orange Pi+---+---+------+---------+-----+--+\n") ;
+  printf (" | BCM | wPi |   Name   | Mode | V | Physical | V | Mode | Name     | wPi | BCM |\n") ;
+  printf (" +-----+-----+----------+------+---+----++----+---+------+----------+-----+-----+\n") ;
+  for (pin = 1 ; pin <= 40 ; pin += 2)
+    readallPhys (pin) ;
+  printf (" +-----+-----+----------+------+---+----++----+---+------+----------+-----+-----+\n") ;
+  printf (" | BCM | wPi |   Name   | Mode | V | Physical | V | Mode | Name     | wPi | BCM |\n") ;
+  printf (" +-----+-----+----------+------+---+-Orange Pi+---+------+----------+-----+-----+\n") ;	
+}
+//guenter ende
 
 void doReadall (void)
 {
@@ -363,10 +410,13 @@ void doReadall (void)
 
   /**/ if ((model == PI_MODEL_A) || (model == PI_MODEL_B))
     abReadall (model, rev) ;
-  else if ((model == PI_MODEL_BP) || (model == PI_MODEL_AP) || (model == PI_MODEL_2) || (model == PI_MODEL_ZERO)||(PI_MODEL_TB))
-    piPlusReadall (model) ;
+  else if (model == PI_MODEL_BP) 
+    bPlusReadall () ;
   else if (model == PI_MODEL_CM)
     cmReadall () ;
+  else if (model == PI_MODEL_BPR) //add for BananaPro by lemaker team
+	 OrangePiReadAll();	//guenter 
+  	 // guenter BPReadAll();
   else
     printf ("Oops - unable to determine board type... model: %d\n", model) ;
 }

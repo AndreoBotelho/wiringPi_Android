@@ -1,8 +1,7 @@
-#
 # Makefile:
 #	wiringPi device - Wiring Compatable library for the Raspberry Pi
 #
-#	Copyright (c) 2012-2015 Gordon Henderson
+#	Copyright (c) 2012-2013 Gordon Henderson
 #################################################################################
 # This file is part of wiringPi:
 #	https://projects.drogon.net/raspberry-pi/wiringpi/
@@ -21,25 +20,21 @@
 #    along with wiringPi.  If not, see <http://www.gnu.org/licenses/>.
 #################################################################################
 
-VERSION=$(shell cat ../VERSION)
-DESTDIR?=/usr
+DYN_VERS_MAJ=2
+DYN_VERS_MIN=0
+
+VERSION=$(DYN_VERS_MAJ).$(DYN_VERS_MIN)
+DESTDIR=/usr
 PREFIX?=/local
-
-LDCONFIG?=ldconfig
-
-ifneq ($V,1)
-Q ?= @
-endif
 
 STATIC=libwiringPiDev.a
 DYNAMIC=libwiringPiDev.so.$(VERSION)
 
 #DEBUG	= -g -O0
 DEBUG	= -O2
-CC	= gcc
+CC	?= gcc
 INCLUDE	= -I.
-DEFS	= -D_GNU_SOURCE
-CFLAGS	= $(DEBUG) $(DEFS) -Wformat=2 -Wall -Winline $(INCLUDE) -pipe -fPIC
+CFLAGS	+= $(DEBUG) -Wformat=2 -Wall $(INCLUDE) -Winline -pipe -fPIC
 
 LIBS    =
 
@@ -52,76 +47,79 @@ SRC	=	ds1302.c maxdetect.c  piNes.c		\
 
 OBJ	=	$(SRC:.c=.o)
 
-HEADERS	=	ds1302.h gertboard.h  lcd128x64.h  lcd.h  maxdetect.h piFace.h  piGlow.h  piNes.h
-
 all:		$(DYNAMIC)
 
 static:		$(STATIC)
 
 $(STATIC):	$(OBJ)
-	$Q echo "[Link (Static)]"
-	$Q ar rcs $(STATIC) $(OBJ)
-	$Q ranlib $(STATIC)
+	@echo "[Link (Static)]"
+	@ar rcs $(STATIC) $(OBJ)
+	@ranlib $(STATIC)
 #	@size   $(STATIC)
 
 $(DYNAMIC):	$(OBJ)
-	$Q echo "[Link (Dynamic)]"
-	$Q $(CC) -shared -Wl,-soname,libwiringPiDev.so$(WIRINGPI_SONAME_SUFFIX) -o libwiringPiDev.so.$(VERSION) -lpthread $(OBJ)
+	@echo "[Link (Dynamic)]"
+	@$(CC) -shared -Wl,-soname,libwiringPiDev.so -o libwiringPiDev.so.$(VERSION) -lpthread $(OBJ)
+	@chmod -x $@
 
 .c.o:
-	$Q echo [Compile] $<
-	$Q $(CC) -c $(CFLAGS) $< -o $@
+	@echo [Compile] $<
+	@$(CC) -c $(CFLAGS) $< -o $@
 
-.PHONY:	clean
+.PHONEY:	clean
 clean:
-	$Q echo "[Clean]"
-	$Q rm -f $(OBJ) $(OBJ_I2C) *~ core tags Makefile.bak libwiringPiDev.*
+	@echo "[Clean]"
+	@rm -f $(OBJ) $(OBJ_I2C) *~ core tags Makefile.bak libwiringPiDev.*
 
-.PHONY:	tags
+.PHONEY:	tags
 tags:	$(SRC)
-	$Q echo [ctags]
-	$Q ctags $(SRC)
+	@echo [ctags]
+	@ctags $(SRC)
 
 
-.PHONY:	install
-install:	$(DYNAMIC)
-	$Q echo "[Install Headers]"
-	$Q install -m 0755 -d						$(DESTDIR)$(PREFIX)/include
-	$Q install -m 0644 $(HEADERS)					$(DESTDIR)$(PREFIX)/include
-	$Q echo "[Install Dynamic Lib]"
-	$Q install -m 0755 -d						$(DESTDIR)$(PREFIX)/lib
-	$Q install -m 0755 libwiringPiDev.so.$(VERSION)			$(DESTDIR)$(PREFIX)/lib/libwiringPiDev.so.$(VERSION)
-	$Q ln -sf $(DESTDIR)$(PREFIX)/lib/libwiringPiDev.so.$(VERSION)	$(DESTDIR)/lib/libwiringPiDev.so
-	$Q $(LDCONFIG)
+.PHONEY:	install-headers
+install-headers:
+	@echo "[Install Headers]"
+	@install -m 0755 -d			$(DESTDIR)$(PREFIX)/include
+	@install -m 0644 ds1302.h		$(DESTDIR)$(PREFIX)/include
+	@install -m 0644 maxdetect.h		$(DESTDIR)$(PREFIX)/include
+	@install -m 0644 piNes.h		$(DESTDIR)$(PREFIX)/include
+	@install -m 0644 gertboard.h		$(DESTDIR)$(PREFIX)/include
+	@install -m 0644 piFace.h		$(DESTDIR)$(PREFIX)/include
+	@install -m 0644 lcd128x64.h		$(DESTDIR)$(PREFIX)/include
+	@install -m 0644 lcd.h			$(DESTDIR)$(PREFIX)/include
+	@install -m 0644 piGlow.h		$(DESTDIR)$(PREFIX)/include
 
-.PHONY:	install-static
-install-static:	$(STATIC)
-	$Q echo "[Install Headers]"
-	$Q install -m 0755 -d						$(DESTDIR)$(PREFIX)/include
-	$Q install -m 0644 $(HEADERS)					$(DESTDIR)$(PREFIX)/include
-	$Q echo "[Install Static Lib]"
-	$Q install -m 0755 -d						$(DESTDIR)$(PREFIX)/lib
-	$Q install -m 0755 libwiringPiDev.a				$(DESTDIR)$(PREFIX)/lib
+.PHONEY:	install
+install:	$(DYNAMIC) install-headers
+	@echo "[Install Dynamic Lib]"
+	@install -m 0755 -d						$(DESTDIR)$(PREFIX)/lib$(LIBARCH)
+	@install -m 0644 libwiringPiDev.so.$(VERSION)			$(DESTDIR)$(PREFIX)/lib$(LIBARCH)/libwiringPiDev.so.$(VERSION)
+	@ln -sf $(DESTDIR)$(PREFIX)/lib$(LIBARCH)/libwiringPiDev.so.$(VERSION)	$(DESTDIR)$(PREFIX)/lib$(LIBARCH)/libwiringPiDev.so
+	-@ldconfig
 
-.PHONY:	install-deb
-install-deb:	$(DYNAMIC)
-	$Q echo "[Install Headers: deb]"
-	$Q install -m 0755 -d							~/wiringPi/debian-template/wiringPi/usr/include
-	$Q install -m 0644 $(HEADERS)						~/wiringPi/debian-template/wiringPi/usr/include
-	$Q echo "[Install Dynamic Lib: deb]"
-	install -m 0755 -d							~/wiringPi/debian-template/wiringPi/usr/lib
-	install -m 0755 libwiringPiDev.so.$(VERSION)				~/wiringPi/debian-template/wiringPi/usr/lib/libwiringPiDev.so.$(VERSION)
-	ln -sf ~/wiringPi/debian-template/wiringPi/usr/lib/libwiringPiDev.so.$(VERSION)	~/wiringPi/debian-template/wiringPi/usr/lib/libwiringPiDev.so
+.PHONEY:	install-static
+install-static:	$(STATIC) install-headers
+	@echo "[Install Static Lib]"
+	@install -m 0755 -d			$(DESTDIR)$(PREFIX)/lib$(LIBARCH)
+	@install -m 0644 libwiringPiDev.a	$(DESTDIR)$(PREFIX)/lib$(LIBARCH)
 
-.PHONY:	uninstall
+.PHONEY:	uninstall
 uninstall:
-	$Q echo "[UnInstall]"
-	$Q cd $(DESTDIR)$(PREFIX)/include/ && rm -f $(HEADERS)
-	$Q cd $(DESTDIR)$(PREFIX)/lib/     && rm -f libwiringPiDev.*
-	$Q $(LDCONFIG)
+	@echo "[UnInstall]"
+	@rm -f $(DESTDIR)$(PREFIX)/include/ds1302.h
+	@rm -f $(DESTDIR)$(PREFIX)/include/maxdetect.h
+	@rm -f $(DESTDIR)$(PREFIX)/include/piNes.h
+	@rm -f $(DESTDIR)$(PREFIX)/include/gertboard.h
+	@rm -f $(DESTDIR)$(PREFIX)/include/piFace.h
+	@rm -f $(DESTDIR)$(PREFIX)/include/lcd128x64.h
+	@rm -f $(DESTDIR)$(PREFIX)/include/lcd.h
+	@rm -f $(DESTDIR)$(PREFIX)/include/piGlow.h
+	@rm -f $(DESTDIR)$(PREFIX)/lib$(LIBARCH)/libwiringPiDev.*
+	@ldconfig
 
 
-.PHONY:	depend
+.PHONEY:	depend
 depend:
 	makedepend -Y $(SRC)
 

@@ -1,22 +1,18 @@
 
 SRC	=	pins.tex
 
-ifneq ($V,1)
-Q ?= @
-endif
-
 
 all:		${SRC}
-	$Q echo	Generating DVI
-	$Q latex  pins.tex
+	@echo	Generating DVI
+	@latex  pins.tex
 
 pins.dvi:	pins.tex
-	$Q latex  pins.tex
+	@latex  pins.tex
 
 pdf:	pins.dvi
-	$Q dvipdf pins.dvi
+	@dvipdf pins.dvi
 
 
-.PHONY:	clean
+.PHONEY:	clean
 clean:
-	$Q rm -f *.dvi *.aux *.log *.ps *.toc *.bak *~
+	@rm -f *.dvi *.aux *.log *.ps *.toc *.bak *~

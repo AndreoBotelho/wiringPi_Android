@@ -221,30 +221,16 @@ int wiringPiI2CSetup (const int devId)
   int rev ;
   const char *device ;
 
-  rev = piGpioLayout () ;
-
-  if (rev == 1)
+  rev = piBoardRev () ;
+/*modify for BananaPro by LeMaker team*/
+  if (rev == 1) 
     device = "/dev/i2c-0" ;
-  else
-    device = "/dev/i2c-1" ;
+  else if (rev == 2)
+   device = "/dev/i2c-1" ;
+  else if (rev == 3)
+    device = "/dev/i2c-0"; // guenter fuer orange pi device = "/dev/i2c-2";
+else
+	device = "/dev/i2c-3" ;
 
   return wiringPiI2CSetupInterface (device, devId) ;
 }
-
-int MiarmI2CSetup (const int i2cid,const int devId)
-{
-  const char *device ;
-  if (i2cid == 1)
-    device = "/dev/i2c-1" ;
-  else if(i2cid == 4)
-    device = "/dev/i2c-4" ;
-  else
-  {
-	printf("Only i2c-1 and i2c-4 can be used\n");
-	printf("MiniarmI2CSetup(<1|4>,devId)\n");
-	return -1;
-  }
-
-  return wiringPiI2CSetupInterface (device, devId) ;
-}
-

@@ -1,7 +1,7 @@
 /*
  * wiringPiSPI.c:
  *	Simplified SPI access routines
- *	Copyright (c) 2012-2015 Gordon Henderson
+ *	Copyright (c) 2012 Gordon Henderson
  ***********************************************************************
  * This file is part of wiringPi:
  *	https://projects.drogon.net/raspberry-pi/wiringpi/
@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <asm/ioctl.h>
 #include <linux/spi/spidev.h>
 
 #include "wiringPi.h"
@@ -38,15 +39,10 @@
 // The SPI bus parameters
 //	Variables as they need to be passed as pointers later on
 
-#ifdef TINKER_BOARD
-const static char       *spiDev0  = "/dev/spidev2.0" ;
-const static char       *spiDev1  = "/dev/spidev2.1" ;
-#else
-const static char       *spiDev0  = "/dev/spidev0.0" ;
-const static char       *spiDev1  = "/dev/spidev0.1" ;
-#endif
-const static uint8_t     spiBPW   = 8 ;
-const static uint16_t    spiDelay = 0 ;
+static const char       *spiDev0  = "/dev/spidev0.0" ;
+static const char       *spiDev1  = "/dev/spidev0.1" ;
+static const uint8_t     spiBPW   = 8 ;
+static const uint16_t    spiDelay = 0 ;
 
 static uint32_t    spiSpeeds [2] ;
 static int         spiFds [2] ;
@@ -118,7 +114,7 @@ int wiringPiSPISetupMode (int channel, int speed, int mode)
 
   if (ioctl (fd, SPI_IOC_WR_MODE, &mode)            < 0)
     return wiringPiFailure (WPI_ALMOST, "SPI Mode Change failure: %s\n", strerror (errno)) ;
-  
+
   if (ioctl (fd, SPI_IOC_WR_BITS_PER_WORD, &spiBPW) < 0)
     return wiringPiFailure (WPI_ALMOST, "SPI BPW Change failure: %s\n", strerror (errno)) ;
 

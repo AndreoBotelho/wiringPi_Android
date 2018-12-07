@@ -79,7 +79,7 @@ include $(BUILD_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := gpio
-LOCAL_SRC_FILES := gpio/gpio.c gpio/readall.c gpio/pins.c
+LOCAL_SRC_FILES := gpio/gpio.c gpio/readall.c gpio/extensions.c gpio/pins.c
 LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/wiringPi \
     $(LOCAL_PATH)/devLib

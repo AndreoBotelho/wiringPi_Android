@@ -1,6 +1,5 @@
-wiringpi (2.26~iwj) rpi-unstable; urgency=low
+wiringop (2.0~ppa1~vivid1) vivid; urgency=high
 
-  * Initial version with real Debian source package build.
+  * Initial release
 
- -- Ian Jackson <ijackson@chiark.greenend.org.uk>  Sat, 12 Sep 2015 18:31:35 +0100
-
+ -- Сергей Хлутчин <sercxjo@gmail.com>  Fri, 23 Sep 2016 18:10:04 +0400

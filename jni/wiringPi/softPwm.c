@@ -49,12 +49,13 @@
 //	Another way to increase the frequency is to reduce the range - however
 //	that reduces the overall output accuracy...
 
-#define	PULSE_TIME	1
+#define	PULSE_TIME	100
 
-static volatile int marks         [MAX_PINS] ;
-static volatile int range         [MAX_PINS] ;
-static volatile pthread_t threads [MAX_PINS] ;
-static volatile int newPin = -1 ;
+static int marks         [MAX_PINS] ;
+static int range         [MAX_PINS] ;
+static pthread_t threads [MAX_PINS] ;
+
+int newPin = -1 ;
 
 
 /*
@@ -83,11 +84,11 @@ static PI_THREAD (softPwmThread)
 
     if (mark != 0)
       digitalWrite (pin, HIGH) ;
-    delayMicroseconds (mark * PULSE_TIME) ;
+    delayMicroseconds (mark * 100) ;
 
     if (space != 0)
       digitalWrite (pin, LOW) ;
-    delayMicroseconds (space * PULSE_TIME) ;
+    delayMicroseconds (space * 100) ;
   }
 
   return NULL ;

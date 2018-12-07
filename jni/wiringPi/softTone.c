@@ -140,7 +140,6 @@ int softToneCreate (int pin)
 
 void softToneStop (int pin)
 {
-
   if (threads [pin] != 0)
   {
 #ifdef ANDROID
